@@ -1,0 +1,56 @@
+####
+# This Dockerfile is used in order to build a container that runs the Quarkus application in native (no JVM) mode
+#
+# Before building the container image run:
+#
+# ./mvnw package -Pnative
+#
+# Then, build the image with:
+#
+# docker build -f src/main/docker/Dockerfile.native -t quarkus/rendering .
+#
+# Then run the container using:
+#
+# docker run -i --rm -p 8080:8080 quarkus/rendering
+#
+###
+FROM ubuntu:18.04
+
+# Environment variables
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+ENV PATH "$PATH:/bin/2.92/python/bin/"
+ENV BLENDER_PATH "/bin/2.92"
+ENV HW="CPU"
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+	wget \
+	libopenexr-dev \
+	bzip2 \
+	build-essential \
+	zlib1g-dev \
+	libxmu-dev \
+	libxi-dev \
+	libxxf86vm-dev \
+	libfontconfig1 \
+	libxrender1 \
+	libgl1-mesa-glx \
+	xz-utils
+
+# Download and install Blender
+RUN wget https://mirror.clarkson.edu/blender/release/Blender2.92/blender-2.92.0-linux64.tar.xz \
+	&& tar -xvf blender-2.92.0-linux64.tar.xz --strip-components=1 -C /bin \
+	&& rm -rf blender-2.92.0-linux64.tar.xz \
+	&& rm -rf blender-2.92.0-linux64
+
+WORKDIR /work/
+RUN chown 1001 /work \
+    && chmod "g+rwX" /work \
+    && chown 1001:root /work
+COPY --chown=1001:root target/*-runner /work/application
+
+EXPOSE 8080
+USER 1001
+
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]

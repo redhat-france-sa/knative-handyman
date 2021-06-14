@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<routes xmlns="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://camel.apache.org/schema/spring https://camel.apache.org/schema/spring/camel-spring-3.8.0.xsd">
+
+    <!-- This route receives rendering request through HTTP with CloudEvents -->
+    <route id="http-receiver">
+        <from uri="platform-http:/render"/>
+        <log message="Message received from HTTP : ${body}"/>
+        <to uri="direct:render-area"/>
+    </route>
+
+    <!-- This route receives rendering request through Kafka -->
+    <route id="kafka-receiver">
+        <from uri="kafka:rendering-requests?brokers=localhost:9092"/>
+        <log message="Message received from Kafka : ${body}"/>
+        <to uri="direct:render-area"/>
+    </route>
+
+    <!-- This route is called either by HTTP or Kafka entry points -->
+    <route id="render-area">
+        <from uri="direct:render-area"/>
+        <log message="Body should be a java.lang.String: ${body.class}"/>
+        <unmarshal>
+            <json library="Jackson"/>
+        </unmarshal>
+        <log message="Body now should be a java.util.Map:  ${body.class}"/>
+        <log message="Preparing rendering, retrieving ${body['objectKey']} from S3 bucket..."/>
+        <toD uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false&amp;fileName=${body['objectKey']}"/>
+        <convertBodyTo type="byte[]"/>
+        <to uri="file://~/downloaded"/>
+
+        <!--
+        <setHeader name="CamelExecCommandArgs">
+            <simple>{{blenderqueue.render.files.collector.folder}}/${body.renderingId}*.png -geometry +0+0 {{blenderqueue.render.files.final.folder}}/${headers.renderingId}.png</simple>
+        </setHeader>
+        <to uri="exec:{{blenderqueue.montage.executable}}"/>
+        -->
+    </route>
+</routes>

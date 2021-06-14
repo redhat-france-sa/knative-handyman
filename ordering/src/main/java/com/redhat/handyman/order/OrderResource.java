@@ -1,0 +1,68 @@
+package com.redhat.handyman.order;
+
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.jboss.logging.Logger;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+@Path("/order")
+public class OrderResource {
+
+   /** Get a JBoss logging logger. */
+   private final Logger logger = Logger.getLogger(getClass());
+
+   @Inject
+   private RenderingService renderingService;
+
+   @Inject
+   @Channel("rendering-requests")
+   Emitter<RenderingRequest> renderingRequestPublisher;
+
+   @GET
+   @Path("/options")
+   public List<RenderingOption> getOptions(FileObject fileObject) {
+      logger.infof("Getting rendering options for '%s'", fileObject.getKey());
+      return renderingService.computeRenderingOptions(fileObject);
+   }
+
+   @POST
+   @Path("/rendering")
+   public Response orderRendering(Order order) {
+
+      if (renderingService.isRenderingOptionValid(order.getFileObject(), order.getOption())) {
+         logger.infof("Ordering a rendering for '%s'", order.getFileObject().getKey());
+
+         // Initialize a response.
+         String renderingId = UUID.randomUUID().toString();
+         RenderingResponse response = new RenderingResponse();
+         response.setCreatedOn(new Date());
+         response.setResponseId(renderingId);
+         response.setChosenOption(order.getOption());
+
+         // Creating the number of requests corresponding to frame dividers.
+         for (int x=0; x<order.getOption().getFrameDividers(); x++) {
+            for (int y=0; y<order.getOption().getFrameDividers(); y++) {
+               RenderingRequest request = new RenderingRequest();
+               request.setRenderingId(renderingId);
+               request.setObjectKey(order.getFileObject().getKey());
+               request.setAreaX(x);
+               request.setAreaY(y);
+               request.setResolutionX(order.getOption().getResolutionX());
+               request.setResolutionY(order.getOption().getResolutionY());
+               // Publishing Rendering request on Kafka.
+               renderingRequestPublisher.send(request);
+            }
+         }
+         return Response.ok(response).build();
+      }
+      return Response.serverError().build();
+   }
+}

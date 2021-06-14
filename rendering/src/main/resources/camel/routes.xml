@@ -25,15 +25,13 @@
         </unmarshal>
         <log message="Body now should be a java.util.Map:  ${body.class}"/>
         <log message="Preparing rendering, retrieving ${body['objectKey']} from S3 bucket..."/>
-        <toD uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false&amp;fileName=${body['objectKey']}"/>
-        <convertBodyTo type="byte[]"/>
-        <to uri="file://~/downloaded"/>
-
-        <!--
-        <setHeader name="CamelExecCommandArgs">
-            <simple>{{blenderqueue.render.files.collector.folder}}/${body.renderingId}*.png -geometry +0+0 {{blenderqueue.render.files.final.folder}}/${headers.renderingId}.png</simple>
+        <setHeader name="CamelAwsS3Key">
+            <simple>${body['objectKey']}</simple>
         </setHeader>
-        <to uri="exec:{{blenderqueue.montage.executable}}"/>
-        -->
+        <to uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false"/>
+        <toD uri="file://~/blender/${body['objectKey']}"/>
+
+        <removeHeaders pattern="*"/>
+        <to uri="http:{{rendering.local.blender.api}}/render-region"/>
     </route>
 </routes>

@@ -4,6 +4,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import java.util.Objects;
 
+/**
+ * Simple bean representing a rendering option.
+ * @author laurent
+ */
 @RegisterForReflection
 public class RenderingOption {
 

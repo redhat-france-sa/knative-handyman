@@ -6,6 +6,11 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RenderingService aggregated business services related to rendering options
+ * proposition and validation.
+ * @author laurent
+ */
 @ApplicationScoped
 public class RenderingService {
 
@@ -13,9 +18,9 @@ public class RenderingService {
    private final Logger logger = Logger.getLogger(getClass());
 
    /**
-    *
-    * @param fileObject
-    * @return
+    * Compute and propose rendering options depending on the file object.
+    * @param fileObject The file to compute options from
+    * @return A list of different options.
     */
    public List<RenderingOption> computeRenderingOptions(FileObject fileObject) {
       List<RenderingOption> options = new ArrayList<>();
@@ -38,13 +43,15 @@ public class RenderingService {
    }
 
    /**
-    *
-    * @param fileObject
-    * @param option
-    * @return
+    * Check is a rendering options is still valie.
+    * @param fileObject The file the option is related to
+    * @param option The chosen option from customer
+    * @return True if chosen option is valid, false otherwise.
     */
    public boolean isRenderingOptionValid(FileObject fileObject, RenderingOption option) {
+      logger.infof("Comparing option %s", option);
       List<RenderingOption> candidates = computeRenderingOptions(fileObject);
+      candidates.forEach(o -> logger.infof("with %s", o.toString()));
       return candidates.contains(option);
    }
 }

@@ -2,11 +2,6 @@ package com.redhat.handyman.order;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-/**
- * Simple bean representing a rendering request event.
- * The renderingId should be the original responseId from origin RenderingResponse.
- * @author laurent
- */
 @RegisterForReflection
 public class RenderingRequest {
 

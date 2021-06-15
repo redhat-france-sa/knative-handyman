@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -21,10 +20,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-/**
- * JAX-RS resource for managing upload of a project file on the S3 bucket.
- * @author laurent
- */
 @Path("/upload")
 public class FileUploadResource {
 
@@ -38,39 +33,36 @@ public class FileUploadResource {
    String bucketName;
 
    @POST
-   @Path("{name}")
+   @Path("/{name}")
    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-   public Response uploadFile(@PathParam("name") String name, @HeaderParam("content-length") long contentLength, InputStream stream) throws IOException {
+   public Response uploadFile(@PathParam("name") String name, InputStream stream) throws IOException {
       // Retrieve file and transfer to S3.
-      logger.infof("Receiving upload of '%s'", name);
-
-      // We do not need going through a temp file as we have content-length from header.
-      //File uploadedFile = uploadToTemp(stream);
-      //long contentLength = uploadedFile.length();
+      logger.infof("Receiving upload of '%s", name);
+      File uploadedFile = uploadToTemp(stream);
+      long size = uploadedFile.length();
 
       logger.infof("Now transferring '%s' to our S3 bucket...", name);
       PutObjectRequest putRequest = buildPutRequest(name);
       PutObjectResponse putResponse = null;
       try {
-         //putResponse = s3Client.putObject(putRequest, RequestBody.fromFile(uploadedFile));
-         putResponse = s3Client.putObject(putRequest, RequestBody.fromInputStream(stream, contentLength));
+         putResponse = s3Client.putObject(putRequest, RequestBody.fromFile(uploadedFile));
       } catch (Exception e) {
          logger.error("Exception while putting object on S3 bucket", e);
          return Response.serverError().build();
       } finally {
          // Removing local temporary file.
-         //uploadedFile.delete();
+         uploadedFile.delete();
       }
 
       logger.infof("'%s' transferred on S3 bucket", name);
       FileObject fileObj = buildFileObject(putRequest, putResponse);
-      fileObj.setSize(contentLength);
+      fileObj.setSize(size);
 
       return Response.accepted(fileObj).build();
    }
 
 
-   /** Upload to temporary file before moving to S3.  */
+   /** */
    protected File uploadToTemp(InputStream data) {
       File tempPath;
       try {
@@ -82,7 +74,7 @@ public class FileUploadResource {
       return tempPath;
    }
 
-   /** Build an Amanzon S3> Put request. */
+   /** */
    protected PutObjectRequest buildPutRequest(String fileName) {
       return PutObjectRequest.builder()
             .bucket(bucketName)
@@ -91,7 +83,6 @@ public class FileUploadResource {
             .build();
    }
 
-   /** Build a FileObject from Amazon objects. */
    protected static FileObject buildFileObject(PutObjectRequest putRequest, PutObjectResponse putResponse) {
       FileObject file = new FileObject();
       file.setKey(putRequest.key());

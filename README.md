@@ -12,7 +12,6 @@ oc create -f manifests/serverless-operator-subscription.yml
 # Wait till knative-serving and knative-eventing projects are creates...
 oc create -f manifests/knative-serving.yml -n knative-serving
 oc create -f manifests/knative-eventing.yml -n knative-eventing
-oc create -f manifests/knative-kafka.yml -n knative-eventing
 ```
 
 ```shell

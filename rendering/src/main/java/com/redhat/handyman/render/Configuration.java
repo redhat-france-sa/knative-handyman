@@ -20,12 +20,12 @@ public class Configuration {
                   return new AwsCredentials() {
                      @Override
                      public String accessKeyId() {
-                        return "AKIA2HTUU7RLXSQ4MI3L";
+                        return "xxx-xxx";
                      }
 
                      @Override
                      public String secretAccessKey() {
-                        return "iluSMfpAeEqlBCfkUap+NoRsZC2Yr7KrqFKoTToP";
+                        return "xxx-xxx";
                      }
                   };
                }

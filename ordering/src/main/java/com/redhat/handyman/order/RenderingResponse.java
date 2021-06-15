@@ -4,10 +4,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import java.util.Date;
 
-/**
- * Simple bean representing a rendering response.
- * @author laurent
- */
 @RegisterForReflection
 public class RenderingResponse {
 

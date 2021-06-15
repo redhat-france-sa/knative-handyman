@@ -1,7 +1,7 @@
 @import url("framework/fonts/overpass-webfont/overpass.css");
 @import url("framework/fonts/overpass-mono-webfont/overpass-mono.css");
 
-@import 'main-dark-green.css';
+@import 'main-light-yellow.css';
 
 * {
 	font-family: overpass,sans-serif;
@@ -16,21 +16,6 @@ body {
 	overflow-y:scroll;
 	scrollbar-width: 15px;
 	background-color: var(--tmpl-back-color);
-}
-
-.rendering-option {
-  width: 100px;
-  height: 100px;
-  background: var(--tmpl-main-color-dark);
-  float: left;
-  margin: 5px;
-  text-align: center;
-  cursor: pointer;
-}
-.rendering-option h1 {
-  font-size: 1.4em;
-}
-.rendering-option p {
 }
 
 

@@ -2,10 +2,6 @@ package com.redhat.handyman.order;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-/**
- * Represent a file object that has been uploaded on S3 bucket.
- * @author laurent
- */
 @RegisterForReflection
 public class FileObject {
    private String key;

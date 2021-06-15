@@ -54,7 +54,7 @@ If you want to learn more about building native executables, please consult http
 $ curl http://localhost:8082/upload/test -F 'test=@plans-main.blend' -H 'Content-Type: application/octet-stream'
 {"key":"uploaded/test-1623156116533","size":322506273,"etag":"\"1d24c05f7ccd1bfac7431cedab42e031\""}
 
-$ curl -XPOST http://localhost:8082/order/options -H 'Content-Type: application/json' -d '{"key":"uploaded/test-1623156116533","size":322506273,"etag":"\"1d24c05f7ccd1bfac7431cedab42e031\""}'
+$ curl -XGET http://localhost:8082/order/options -H 'Content-Type: application/json' -d '{"key":"uploaded/test-1623156116533","size":322506273,"etag":"\"1d24c05f7ccd1bfac7431cedab42e031\""}'
 [{"name":"S","cost":4,"samples":4,"frameDividers":2,"resolutionX":1280,"resolutionY":720},{"name":"M","cost":10,"samples":10,"frameDividers":3,"resolutionX":1280,"resolutionY":720},{"name":"L","cost":12,"samples":100,"frameDividers":4,"resolutionX":1280,"resolutionY":720}]
 
 $ curl -XPOST http://localhost:8082/order/rendering -H 'Content-Type: application/json' -d '{"fileObject": {"key":"uploaded/test-1623156116533","size":322506273,"etag":"\"1d24c05f7ccd1bfac7431cedab42e031\""}, "option": {"name":"L","cost":12,"samples":100,"frameDividers":4,"resolutionX":1280,"resolutionY":720}}'

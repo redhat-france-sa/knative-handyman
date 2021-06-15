@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Knative Handyman</title>
-    <meta name="description" content="Knative Handyman">
+    <title>bqueue</title>
+    <meta name="description" content="bqueue interface">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="css/main.css" />
@@ -26,7 +26,7 @@
     <div class="content-body">
         <!-- PUT YOUR CONTENT HERE -->
         <div class="jumbotron"  >
-            <h1>Knative Handyman</h1>
+            <h1>bqueue interface</h1>
         </div>
         <!-- UPLOAD FUNCTION -->
         <div class="flex-container">
@@ -40,9 +40,8 @@
                     <input type="file" id="file" />
                 </form>
                 <button onclick="upload()">Upload</button>
-                <!--
-                <button  id="open-on-all" onclick="backEndRequest(null,'/open','post', formDataToJson('file-name-form'))">Open on all instances</button>
-                -->
+                <button  id="open-on-all"
+                onclick="backEndRequest(null,'/open','post', formDataToJson('file-name-form'))">Open on all instances</button>
             </div>
             <div class="flex-item flex-grow">
                 <div  class="flex-container">
@@ -53,36 +52,80 @@
             </div>
         </div>
 
+        <!-- broadcast status -->
         <div class="flex-container">
-            <!-- Rendering options -->
-            <div class="flex-item">
-                <h2>Choose Rendering Options</h2>
-
-                <div id="rendering-options">
-                    Upload a Blender file to discover your options!
-                </div>
-            </div>
-            <!-- Rendering status -->
             <div class="flex-item flex-grow">
                 <div  class="flex-container">
-                    <h2>Rendering Status</h2>
-                    <button onclick="clearTable('rendering-status-table')">clear</button>
+                    <h2>Render instances broadcast status</h2>
+                    <button onclick="clearTable('broadcast-state-table')">clear</button>
                 </div>
-                <table id="rendering-status-table"></table>
+                <table id="broadcast-state-table"></table>
             </div>
         </div>
 
         <!-- RENDER FUNCTION -->
         <div class="flex-container">
+            <div class="flex-item " >
+                <h2>Distributed single frame render</h2>
+                <form id="distributed-frame-render-form" class="flex-container-col">
+                    <label>Filename</label>
+                    <input type="text" id="fileName" value="test.blend" placeholder="fileName">
+                    <label>Resolution X</label>
+                    <input type="text" id="resolutionX" value="1280" placeholder="resolutionX">
+                    <label>Resolution Y</label>
+                    <input type="text" id="resolutionY" value="720" placeholder="resolutionY">
+                    <label>Samples</label>
+                    <input type="text" id="samples" value="1" placeholder="samples">
+                    <label>Frame divider</label>
+                    <input type="text" id="frameDivider" value="2" placeholder="frameDivider">
+                </form>
+                <button  id="send-button"
+                    onclick="backEndRequest(null,'/distributed-frame-render','post', formDataToJson('distributed-frame-render-form'))">send</button>
+            </div>
+
             <div class="flex-item flex-grow">
-                <h2>Rendering result</h2>
+                <div  class="flex-container">
+                    <h2>Distributed single frame render broadcast status</h2>
+                    <button onclick="clearTable('distributed-frame-render-broadcast-state-table')">clear</button>
+                </div>
+                <table id="distributed-frame-render-broadcast-state-table"></table>
+            </div>
+        </div>
+        <div class="flex-container">
+            <div class="flex-item flex-grow">
                 <canvas id="image" ></canvas>
             </div>
         </div>
-    </div>
+        <div class="flex-container">
+            <div class="flex-item flex-grow">
+                <h2>Tile table</h2>
+                <button onclick="clearTable('tile-table')">clear</button>
+                <table id="tile-table"></table>
+            </div>
+        </div>
+        <div class="flex-container">
+            <div class="flex-item flex-grow flex-container-col">
+                <div class="flex-container">
+                    <h2>Log messages</h2>
+                    <button onclick="clearTable('log-table')">clear</button>
+                </div>
+                <table id="log-table">
+                </table>
+            </div>
+            <div class="flex-item flex-grow">
+                <h2>Last message</h2>
+                <pre id="messages">Basic Messages Will show here</pre>
+            </div>
+        </div>
+        <div class="flex-container">
+ 
+        </div>
 
+    </div>
     <!-- END PUT YOUR CONTENT HERE -->
+
     <script src="js/render.js"></script>
+
 </body>
 
 </html>

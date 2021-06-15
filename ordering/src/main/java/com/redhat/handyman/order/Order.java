@@ -1,5 +1,12 @@
 package com.redhat.handyman.order;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+/**
+ * Simple bean representing a rendering order.
+ * @author laurent
+ */
+@RegisterForReflection
 public class Order {
 
    private FileObject fileObject;

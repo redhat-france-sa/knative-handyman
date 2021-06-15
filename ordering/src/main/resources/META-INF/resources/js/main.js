@@ -1,3 +1,4 @@
+var appContext = {};
 
 // GLOBAL VARS with objservers
 var globalVar = {
@@ -9,7 +10,7 @@ var globalVar = {
     ],
     pageReady: [
       async function (pageReady) {
-        console.log("html ready");
+        console.log("HTML ready, connecting to WebSocket...");
         connectSocket();
       }
     ]
@@ -59,11 +60,13 @@ function includeHTML() {
 }
 
 async function loadConfig() {
+  /*
   response = await fetch(window.location.protocol + "//" + window.location.host + '/uiconfig', {
     method: 'get',
     credentials: 'include'
   });
   global.uiconfig = await response.json();
+  */
 }
 
 function loadTheme(config) {
@@ -76,7 +79,6 @@ function loadTheme(config) {
 }
 
 function backEndRequest(elementId, path, meth, msg) {
-
   if (path.startsWith("${")) {
     path = "/" + path;
   }
@@ -115,16 +117,13 @@ function toggleResponsiveMenu() {
   }
 }
 
-
 function connectSocket() {
-  // receiving functions 
+  // receiving functions
   server = ((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.hostname + ":" + window.location.port + "/websocket";
   socket = new WebSocket(server);
   socket.onmessage = processSocketMsg;
 
-
   socket.onopen = function () {
-
     logo = document.getElementById("logo");
     if (logo != null) {
       logo.classList.remove("negative");
@@ -151,47 +150,142 @@ function connectSocket() {
 
 function processSocketMsg(event) {
   text = event.data;
+  console.log("Receiving msg: " + text);
   var jsonMsg;
   try {
     jsonMsg = JSON.parse(text);
   } catch (e) {
-    jsonMsg = {
-      actions: "notify",
-      data: text
+    return;
+  }
+
+  if (jsonMsg.type != null && jsonMsg.type === "upload") {
+    jsonMsg.formatting = {
+      status: function (value){
+        if (value=="done"){
+          return "positive";
+        } else {
+          return "negative";
+        }
+      }
     }
   }
 
-  if (jsonMsg.type != null) {
-    // we might do some additionall processing
-    functionalProcessing(jsonMsg)
-  }
-
-  if (jsonMsg.actions.includes("clear-data")) {
-    for (var j = 0; j < jsonMsg.elementIds.length; j++) {
-      tableId = jsonMsg.elementIds[j];
-      clearTable(tableId);
-      console.log(tableId + " has been cleared");
+  if (jsonMsg.actions != null) {
+    if (jsonMsg.actions.includes("update-header")) {
+      updateTableHeaders(jsonMsg);
+    }
+    if (jsonMsg.actions.includes("upsert-data")) {
+      insertOrUpdateTable(jsonMsg);
     }
   }
 
-
-  if (jsonMsg.actions.includes("notify")) {
-    logMessage(JSON.stringify(jsonMsg, undefined, 2));
-  }
-
-  if (jsonMsg.actions.includes("update-header")) {
-    updateTableHeaders(jsonMsg);
-  }
-  if (jsonMsg.actions.includes("append-data")) {
-    appendToTableBody(jsonMsg, 1);
-  }
-  if (jsonMsg.actions.includes("upsert-data")) {
-    insertOrUpdateTable(jsonMsg);
-  }
-  if (jsonMsg.actions.includes("refresh-data")) {
-    refreshTable(jsonMsg);
+  if (jsonMsg.status != null) {
+    // This is a status update.
+    var statusMsg;
+    switch (jsonMsg.status) {
+      case "received":
+        statusMsg = "Received request";
+        break;
+      case "opened":
+        statusMsg = "Opened file";
+        break;
+      case "starting":
+        statusMsg = "Starting rendering...";
+        break;
+      case "rendered":
+        statusMsg = "Finished rendering";
+        break;
+    }
+    insertStatusMessage(jsonMsg, statusMsg);
+  } else if (jsonMsg.result != null) {
+    // This is a result response.
+    console.log("Processing a partial result: " + jsonMsg.result);
+    var ctx = document.getElementById("image").getContext("2d");
+    var img = new Image();
+    img.onload = function () {
+      ctx.drawImage(img, jsonMsg.areaX, jsonMsg.areaY)
+    }
+    img.src = jsonMsg.result;
   }
 };
+
+function insertStatusMessage(jsonMsg, statusMsg) {
+  var table = document.getElementById("rendering-status-table");
+  var rowContent = '<tr>';
+  rowContent += '<td>' + jsonMsg.timestamp + '</td>';
+  rowContent += '<td>' + jsonMsg.areaX + ':' + jsonMsg.areaY + '</td>';
+  rowContent += '<td>' + statusMsg + '</td></tr>';
+
+  var row = table.insertRow(-1);
+  row.id = 'status-' + jsonMsg.timestamp;
+  row.innerHTML = rowContent;
+  flashAnimate("status-" + jsonMsg.timestamp);
+}
+
+function clearTable(tableId){
+  document.getElementById(tableId).innerHTML = "";
+}
+
+function insertOrUpdateTable(rawData){
+  for (var j = 0; j < rawData.elementIds.length; j++) {
+    tableId = rawData.elementIds[j];
+
+    var table = document.getElementById(tableId);
+    // loop through the data
+    for (var i = 0; i < rawData.data.length; i++) {
+
+      row = table.rows.namedItem(rawData.data[i].id);
+      if (row == null) {
+        row = table.insertRow(-1);
+        row.id =rawData.data[i].id;
+      }
+      for (const key in rawData.data[i]) {
+        if (rawData.data[i].hasOwnProperty(key)) {
+          const element = rawData.data[i][key];
+          cell = row.cells.namedItem(key);
+          if (cell == null){
+              cell = row.insertCell(-1);
+              cell.id = key;
+          }
+
+          if (element!=null){
+            if(typeof element == "object"){
+                cell.innerHTML=JSON.stringify(element,undefined,2);
+            } else {
+              if (cell.innerHTML != element) {
+                cell.innerHTML=element;
+
+                //  conditional formatting
+                if ( rawData.formatting !== undefined && rawData.formatting.hasOwnProperty(key) )  {
+                  cell.className = "";
+                  cell.classList.add(rawData.formatting[key](element));
+                 }
+
+                flashAnimateRef(cell);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// expects array of elements with flat key value
+function updateTableHeaders(rawData){
+  for (var i = 0; i < rawData.elementIds.length; i++) {
+    tableId = rawData.elementIds[i];
+
+    line = "<th>"+Object.keys(rawData.data[0]).join("</th><th>")+"</th>";
+    row = document.getElementById(tableId + "-header");
+    // header does not exist
+    if (row == null) {
+      row = document.getElementById(tableId).insertRow(0);
+      row.id = tableId + "-header";
+    }
+    row.innerHTML=line;
+  }
+}
 
 function flashAnimate(elementId) {
   element = document.getElementById(elementId);
@@ -203,192 +297,3 @@ function flashAnimateRef(element) {
   void element.offsetWidth;
   element.classList.add("flash-animation");
 }
-
-function logMessage(msg) {
-  const currentDate = new Date();
-  msg = currentDate + "\n" + msg;
-  document.getElementById("messages").innerHTML = msg
-  flashAnimate("messages");
-}
-
-// upserts data in the list and removes lines that are not existing anymore.
-function refreshTable(rawData) {
-  insertOrUpdateTable(rawData);
-  var idarray = rawData.data.map(x => x.id);
-  for (var j = 0; j < rawData.elementIds.length; j++) {
-    tableId = rawData.elementIds[j];
-    var table = document.getElementById(tableId);
-    for (var i = 1, row; row = table.rows[i]; i++) {
-      if (!idarray.includes(row.id)) {
-        table.deleteRow(row.rowIndex);
-      }
-    }
-  }
-}
-
-
-function insertOrUpdateTable(rawData) {
-
-  for (var j = 0; j < rawData.elementIds.length; j++) {
-    tableId = rawData.elementIds[j];
-
-    var table = document.getElementById(tableId);
-    // loop through the data
-    for (var i = 0; i < rawData.data.length; i++) {
-
-      row = table.rows.namedItem(rawData.data[i].id);
-      if (row == null) {
-        row = table.insertRow(-1);
-        row.id = rawData.data[i].id;
-      }
-
-      for (const key in rawData.data[i]) {
-
-
-        if (rawData.data[i].hasOwnProperty(key)) {
-
-          const element = rawData.data[i][key];
-          cell = row.cells.namedItem(key);
-          if (cell == null) {
-            cell = row.insertCell(-1);
-            cell.id = key;
-          }
-
-          if (element != null) {
-            if (typeof element == "object") {
-              cell.innerHTML = JSON.stringify(element, undefined, 2);
-            } else {
-
-              if (cell.innerHTML != element) {
-                cell.innerHTML = element;
-
-                //  conditional formatting
-                if (rawData.formatting !== undefined && rawData.formatting.hasOwnProperty(key)) {
-                  cell.className = "";
-                  cell.classList.add(rawData.formatting[key](element));
-                }
-
-                flashAnimateRef(cell);
-              }
-
-
-
-            }
-          }
-        }
-      }
-
-    }
-  }
-}
-
-// expects array of elements with flat key value
-function updateTableHeaders(rawData) {
-
-  for (var i = 0; i < rawData.elementIds.length; i++) {
-    tableId = rawData.elementIds[i];
-
-    line = "<th>" + Object.keys(rawData.data[0]).join("</th><th>") + "</th>";
-    row = document.getElementById(tableId + "-header");
-    // header does not exist
-    if (row == null) {
-      row = document.getElementById(tableId).insertRow(0);
-      row.id = tableId + "-header";
-    }
-
-    row.innerHTML = line;
-
-  }
-
-
-}
-
-function appendToTableBody(rawData, position = -1) {
-
-  for (var j = 0; j < rawData.elementIds.length; j++) {
-    tableId = rawData.elementIds[j];
-
-    for (var i = 0; i < rawData.data.length; i++) {
-      currentDataObject = rawData.data[i];
-      row = document.getElementById(tableId).insertRow(position);
-
-      for (const key in currentDataObject) {
-
-        if (currentDataObject.hasOwnProperty(key)) {
-
-          const element = currentDataObject[key];
-          cell = row.insertCell(-1);
-
-          if (element != null) {
-            if (typeof element == "object") {
-              cell.innerHTML = JSON.stringify(element, undefined, 2);
-            } else {
-              cell.innerHTML = element;
-
-              //  conditional formatting
-              if (rawData.formatting !== undefined && rawData.formatting.hasOwnProperty(key)) {
-                cell.className = "";
-                cell.classList.add(rawData.formatting[key](element));
-              }
-
-            }
-          }
-        }
-      }
-
-      flashAnimateRef(row);
-    }
-  }
-}
-
-function clearTable(tableId) {
-  document.getElementById(tableId).innerHTML = "";
-}
-
-
-// testing
-var exampleData = {};
-
-var exampleFunctionalData =
-  [
-    {
-      id: "el1",
-      dateTime: "2021-01-01 11:30:21",
-      header: "Lorem Ipsum is simply dummy text of the printing and typesetting industry",
-      body: "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout",
-      complexData: {
-        test: "abc",
-        test2: "xyz"
-      }
-    },
-    {
-      id: "el2",
-      dateTime: "2021-01-01 11:31:21",
-      header: "Lorem Ipsum is simply dummy text of the printing and typesetting industry",
-      body: "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout",
-      complexData: {
-        test: "abc",
-        test2: "xyz"
-      }
-    }
-  ]
-
-exampleData =
-{
-  elementIds: ["log-table"],
-  actions: ["notify", "update-header", "append-data"],
-  data: exampleFunctionalData
-}
-
-exampleState =
-{
-  elementIds: ["state-table"],
-  actions: ["notify", "update-header", "upsert-data"],
-  data: exampleFunctionalData
-}
-
-var exampleEvent = {}
-exampleEvent.data = JSON.stringify(exampleData);
-var exampleStateEvent = {}
-exampleStateEvent.data = JSON.stringify(exampleState);
-

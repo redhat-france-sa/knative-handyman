@@ -31,7 +31,21 @@
         <to uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false"/>
         <toD uri="file://~/blender/${body['objectKey']}"/>
 
+        <wiretap>
+
+        </wiretap>
+
+        <to uri="http:{{rendering.local.blender.api}}/open"/>
+
+        <wiretap>
+
+        </wiretap>
+
         <removeHeaders pattern="*"/>
         <to uri="http:{{rendering.local.blender.api}}/render-region"/>
+
+        <wiretap>
+
+        </wiretap>
     </route>
 </routes>

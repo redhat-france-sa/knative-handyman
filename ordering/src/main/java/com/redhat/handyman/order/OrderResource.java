@@ -5,7 +5,6 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
@@ -13,6 +12,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * JAX-RS resource for managing order options and submission.
+ * @author laurent
+ */
 @Path("/order")
 public class OrderResource {
 
@@ -26,17 +29,17 @@ public class OrderResource {
    @Channel("rendering-requests")
    Emitter<RenderingRequest> renderingRequestPublisher;
 
-   @GET
-   @Path("/options")
+   @POST
+   @Path("options")
    public List<RenderingOption> getOptions(FileObject fileObject) {
       logger.infof("Getting rendering options for '%s'", fileObject.getKey());
       return renderingService.computeRenderingOptions(fileObject);
    }
 
    @POST
-   @Path("/rendering")
+   @Path("rendering")
    public Response orderRendering(Order order) {
-
+      logger.infof("Receiving an order '%s'", order);
       if (renderingService.isRenderingOptionValid(order.getFileObject(), order.getOption())) {
          logger.infof("Ordering a rendering for '%s'", order.getFileObject().getKey());
 

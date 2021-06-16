@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: handyman-ordering
+  name: handyman-ordering
+spec:
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: handyman-ordering
+    weight: 100
+  wildcardPolicy: None

@@ -58,6 +58,8 @@ public class OrderResource {
                request.setObjectKey(order.getFileObject().getKey());
                request.setAreaX(x);
                request.setAreaY(y);
+               request.setSamples(order.getOption().getSamples());
+               request.setFrameDivider(order.getOption().getFrameDividers());
                request.setResolutionX(order.getOption().getResolutionX());
                request.setResolutionY(order.getOption().getResolutionY());
                // Publishing Rendering request on Kafka.

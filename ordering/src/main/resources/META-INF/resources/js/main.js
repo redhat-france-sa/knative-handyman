@@ -60,13 +60,11 @@ function includeHTML() {
 }
 
 async function loadConfig() {
-  /*
   response = await fetch(window.location.protocol + "//" + window.location.host + '/uiconfig', {
     method: 'get',
     credentials: 'include'
   });
   global.uiconfig = await response.json();
-  */
 }
 
 function loadTheme(config) {
@@ -178,7 +176,6 @@ function processSocketMsg(event) {
       insertOrUpdateTable(jsonMsg);
     }
   }
-
   if (jsonMsg.status != null) {
     // This is a status update.
     var statusMsg;

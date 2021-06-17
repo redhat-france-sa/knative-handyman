@@ -14,11 +14,30 @@ public class RenderingRequest {
    private String renderingId;
    private int areaX;
    private int areaY;
+   private int frameDivider;
    private int resolutionX;
    private int resolutionY;
+   private int samples;
 
    public RenderingRequest() {
    }
+
+   public int getSamples() {
+      return samples;
+   }
+
+   public void setSamples(int samples) {
+      this.samples = samples;
+   }
+
+   public int getFrameDivider() {
+      return frameDivider;
+   }
+
+   public void setFrameDivider(int frameDivider) {
+      this.frameDivider = frameDivider;
+   }
+
 
    public String getObjectKey() {
       return objectKey;

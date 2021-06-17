@@ -11,7 +11,7 @@
 
     <!-- This route receives rendering request through Kafka -->
     <route id="kafka-receiver">
-        <from uri="kafka:rendering-requests?brokers=localhost:9092"/>
+        <from uri="kafka:rendering-requests?brokers={{kafkabroker}}&amp;groupId=renderers"/>
         <log message="Message received from Kafka : ${body}"/>
         <to uri="direct:render-area"/>
     </route>
@@ -23,15 +23,126 @@
         <unmarshal>
             <json library="Jackson"/>
         </unmarshal>
+        <setProperty name="origBody">
+            <simple>${body}</simple>
+        </setProperty>
+
+
+        <wireTap pattern="inOnly" uri="kafka:rendering-status?brokers={{kafkabroker}}&amp;groupId=renderers">
+            <body>
+                  <simple>
+                    {
+                        "areaX" : "${exchange.properties[origBody]['areaX']}",
+                        "areaY" : "${exchange.properties[origBody]['areaY']}",
+                        "fileName" : "${exchange.properties[origBody]['objectKey']}",
+                        "status" : "received",
+                        "timestamp": "${date:now:yyyyMMdd-HH:mm:ss}"
+                    }
+                  </simple>
+            </body>
+        </wireTap>
+
         <log message="Body now should be a java.util.Map:  ${body.class}"/>
-        <log message="Preparing rendering, retrieving ${body['objectKey']} from S3 bucket..."/>
+        <log message="Preparing rendering, retrieving ${body['objectKey']}"/>
         <setHeader name="CamelAwsS3Key">
             <simple>${body['objectKey']}</simple>
         </setHeader>
-        <to uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false"/>
-        <toD uri="file://~/blender/${body['objectKey']}"/>
+        <setHeader name="CamelFileName">
+            <simple>${header.CamelAwsS3Key}</simple>
+        </setHeader>
+        
 
+
+        <toD uri="http://{{fileserverurl}}/${header.CamelAwsS3Key}?httpMethod=GET"/>
+        <to uri="file:{{blenderqueue.blend.files.folder}}"/>
+        <!-- <to uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false"/> -->
+        <!-- <toD uri="file://~/blender/${body['objectKey']}"/> -->
+
+        <setBody>
+            <simple>
+                {
+                    "fileName": "${headers.CamelFileName}"
+                }
+            </simple>
+        </setBody>
         <removeHeaders pattern="*"/>
-        <to uri="http:{{rendering.local.blender.api}}/render-region"/>
+        <log message="${body}"></log>
+        <to uri="http:{{rendering.local.blender.api}}/open?httpMethod=POST"/>
+
+        <setBody>
+            <simple>
+                {
+                    "outputPrefix" : "${exchange.properties[origBody]['objectKey']}",
+                    "resolutionX" : ${exchange.properties[origBody]['resolutionX']},
+                    "resolutionY" : ${exchange.properties[origBody]['resolutionY']},
+                    "samples" : ${exchange.properties[origBody]['samples']},
+                    "frameDivider" : ${exchange.properties[origBody]['frameDivider']},
+                    "areaX" : ${exchange.properties[origBody]['areaX']},
+                    "areaY" : ${exchange.properties[origBody]['areaY']}
+                }
+            </simple>
+        </setBody>
+
+        <wireTap pattern="inOnly" uri="kafka:rendering-status?brokers={{kafkabroker}}&amp;groupId=renderers">
+            <body>
+                  <simple>
+                    {
+                        "areaX" : "${exchange.properties[origBody]['areaX']}",
+                        "areaY" : "${exchange.properties[origBody]['areaY']}",
+                        "fileName" : "${exchange.properties[origBody]['objectKey']}",
+                        "status" : "starting",
+                        "timestamp": "${date:now:yyyyMMdd-HH:mm:ss}"
+                    }
+                  </simple>
+            </body>
+        </wireTap>
+
+        <to uri="http:{{rendering.local.blender.api}}/render-region?httpMethod=POST"/>
+
+        <wireTap pattern="inOnly" uri="kafka:rendering-status?brokers={{kafkabroker}}&amp;groupId=renderers">
+            <body>
+                  <simple>
+                    {
+                        "areaX" : "${exchange.properties[origBody]['areaX']}",
+                        "areaY" : "${exchange.properties[origBody]['areaY']}",
+                        "fileName" : "${exchange.properties[origBody]['objectKey']}",
+                        "status" : "rendered",
+                        "timestamp": "${date:now:yyyyMMdd-HH:mm:ss}"
+                    }
+                  </simple>
+            </body>
+        </wireTap>
+
+        <unmarshal>
+            <json library="Jackson" />
+        </unmarshal>
+        <log message="${body}"/>
+        <setHeader name="filename">
+            <simple>${body[filePath]}</simple>
+        </setHeader>
+        <setBody>
+            <method ref="helper" method="getLocalPictureAsStream"/>
+        </setBody>
+        <removeHeader headerName="Content-Type"/>
+        <log message="${headers}"/>
+        <toD uri="http:{{uploadserverurl}}/upload/${header.filename}?httpMethod=POST"/>
+
+        <setHeader name="computedXY">
+            <method ref="helper" method="imageDataFromPng"/>
+        </setHeader>
+
+        <setBody>
+            <simple>
+                {
+                    "areaX" : ${header.computedXY[areaX]},
+                    "areaY" : ${header.computedXY[areaY]},
+                    "fileName" : "${exchange.properties[origBody]['objectKey']}",
+                    "result" : "/renders/tiles/${headers.filename}",
+                    "timestamp": "${date:now:yyyyMMdd-HH:mm:ss}"
+                }
+              </simple>
+        </setBody>
+        <log message="${body}"/>
+        <to uri="kafka:rendering-results?brokers={{kafkabroker}}"/>
     </route>
 </routes>

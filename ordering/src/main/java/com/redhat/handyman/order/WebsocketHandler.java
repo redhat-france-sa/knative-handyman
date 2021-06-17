@@ -8,11 +8,14 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,6 +54,8 @@ public class WebsocketHandler {
    public void onMessage(String message) {
       // Nothing to do here...
    }
+
+   ViewUpdate viewUpdate = new ViewUpdate();
 
    @Incoming("rendering-status")
    public void onRenderingStatus(String message) {

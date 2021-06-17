@@ -54,7 +54,7 @@ function upload() {
     };
 
     xhr.onreadystatechange = function () { // Call a function when the state changes.
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 202) {
+      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
         data = {
           id: fileName,
           status: "done"

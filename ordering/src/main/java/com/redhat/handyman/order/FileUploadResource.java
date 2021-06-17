@@ -16,9 +16,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 /**
@@ -27,6 +30,12 @@ import java.nio.file.StandardCopyOption;
  */
 @Path("/upload")
 public class FileUploadResource {
+
+   @ConfigProperty(name = "s3Activated") 
+   Boolean s3Activated;
+
+   @ConfigProperty(name = "blendfilefolder")
+   String blendfilefolder;
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -47,7 +56,7 @@ public class FileUploadResource {
       // We do not need going through a temp file as we have content-length from header.
       //File uploadedFile = uploadToTemp(stream);
       //long contentLength = uploadedFile.length();
-
+      if (s3Activated){
       logger.infof("Now transferring '%s' to our S3 bucket...", name);
       PutObjectRequest putRequest = buildPutRequest(name);
       PutObjectResponse putResponse = null;
@@ -65,8 +74,25 @@ public class FileUploadResource {
       logger.infof("'%s' transferred on S3 bucket", name);
       FileObject fileObj = buildFileObject(putRequest, putResponse);
       fileObj.setSize(contentLength);
-
       return Response.accepted(fileObj).build();
+      }else{
+         Files.createDirectories(Paths.get(blendfilefolder));
+         byte[] buffer = new byte[8192];
+         File targetFile = new File(blendfilefolder+"/"+name);
+         OutputStream outStream = new FileOutputStream(targetFile);
+         int read;
+         while ((read = stream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, read);
+        }
+         outStream.close();
+         stream.close();
+         FileObject fileOb = new FileObject();
+         fileOb.setKey(name);
+         fileOb.setSize(contentLength);
+         fileOb.setETag(name);
+         logger.info("file transfered");
+         return Response.ok(fileOb).build();
+      }
    }
 
 

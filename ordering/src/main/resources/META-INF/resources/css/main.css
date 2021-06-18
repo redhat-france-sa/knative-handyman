@@ -20,7 +20,7 @@ body {
 
 .rendering-option {
   width: 100px;
-  height: 100px;
+  height: 180px;
   background: var(--tmpl-main-color-dark);
   float: left;
   margin: 5px;
@@ -30,7 +30,16 @@ body {
 .rendering-option h1 {
   font-size: 1.4em;
 }
-.rendering-option p {
+.rendering-option small {
+  font-size: 0.8em;
+}
+.rendering-option-selected {
+  background-color: var(--tmpl-main-color-light) !important;
+}
+
+.status-container {
+  max-height: 300px !important;
+  overflow-y: scroll !important;
 }
 
 

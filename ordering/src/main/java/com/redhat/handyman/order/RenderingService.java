@@ -35,9 +35,10 @@ public class RenderingService {
          options.add(new RenderingOption("M", 5, 10, 3, 1280, 720));
          options.add(new RenderingOption("L", 10, 100, 4, 1280, 720));
       } else {
-         options.add(new RenderingOption("S", 4, 4, 2, 1280, 720));
-         options.add(new RenderingOption("M", 10, 10, 3, 1280, 720));
-         options.add(new RenderingOption("L", 12, 100, 4, 1280, 720));
+         options.add(new RenderingOption("S", 4, 10, 2, 1280, 720));
+         options.add(new RenderingOption("M", 10, 100, 3, 1280, 720));
+         options.add(new RenderingOption("L", 14, 512, 4, 1280, 720));
+         options.add(new RenderingOption("XL", 20, 1024, 5, 1280, 720));
       }
       return options;
    }

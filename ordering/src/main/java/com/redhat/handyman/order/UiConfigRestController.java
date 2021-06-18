@@ -12,16 +12,16 @@ import org.eclipse.microprofile.config.ConfigProvider;
 
 @Path("/uiconfig")
 public class UiConfigRestController {
-    private Map<String,String> uiConfig;
+   private Map<String, String> uiConfig;
 
-    public UiConfigRestController() {
-        uiConfig = new TreeMap<String,String>();
-        uiConfig.put("theme", ConfigProvider.getConfig().getValue("theme",String.class));
-    }
+   public UiConfigRestController() {
+      uiConfig = new TreeMap<String, String>();
+      uiConfig.put("theme", ConfigProvider.getConfig().getValue("theme", String.class));
+   }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String,String> getUiConfig(){
-        return uiConfig;
-    }
+   @GET
+   @Produces(MediaType.APPLICATION_JSON)
+   public Map<String, String> getUiConfig() {
+      return uiConfig;
+   }
 }

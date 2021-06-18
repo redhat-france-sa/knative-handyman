@@ -17,8 +17,19 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 WORKDIR /work/
 RUN chown 1001 /work \
+    && mkdir /work/data \
+    && mkdir /work/data/blendfiles \
+    && mkdir /work/data/renders \
     && chmod "g+rwX" /work \
-    && chown 1001:root /work
+    && chown 1001:root /work \
+    && chmod "g+rwX" /work/data \
+    && chown 1001:root /work/data \
+    && chmod "g+rwX" /work/data/blendfiles \
+    && chown 1001:root /work/data/blendfiles \
+    && chmod "g+rwX" /work/data/blendfiles \
+    && chown 1001:root /work/data/renders \
+    && chmod "g+rwX" /work/data/renders \
+    && chown 1001:root /work/data/renders
 COPY --chown=1001:root target/*-runner /work/application
 
 EXPOSE 8080

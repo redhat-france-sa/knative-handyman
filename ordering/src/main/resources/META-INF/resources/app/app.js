@@ -99,11 +99,13 @@ function refreshRenderingOptions() {
 
    var newOptions = '';
    appContext.options.forEach(option => {
+     var workers = (Number(option.frameDividers) * Number(option.frameDividers));
      newOptions += '<div id="option-' + option.name
         + '" class="rendering-option" '
         + 'onclick="chooseOption(\''+option.name+'\')">';
      newOptions += '<h1>' + option.name + '</h1>';
      newOptions += '<p>' + option.cost + ' euros</p>';
+     newOptions += '<small>' + option.samples + ' samples<br/>& ' + workers + ' workers</small>';
      newOptions += '</div>';
    });
    options.innerHTML = newOptions;
@@ -111,11 +113,23 @@ function refreshRenderingOptions() {
 
 function chooseOption(name) {
   console.log("Picked option " + name);
+  var optionTiles = document.getElementsByClassName("rendering-option");
+  for (i=0; i<optionTiles.length; i++) {
+    var optionTile = optionTiles[i];
+    optionTile.classList.remove("rendering-option-selected");
+  }
+
+  var optionTile = document.getElementById("option-" + name);
+  if (optionTile != null) {
+    optionTile.classList.add("rendering-option-selected");
+  }
 
   var option = appContext.options.filter(o => o.name === name)[0];
   console.log("Found valid option: " + JSON.stringify(option));
 
   var c = document.getElementById("image");
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
   c.width = option.resolutionX;
   c.height = option.resolutionY;
 

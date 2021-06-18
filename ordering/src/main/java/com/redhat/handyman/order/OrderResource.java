@@ -1,7 +1,9 @@
 package com.redhat.handyman.order;
 
+import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
@@ -23,7 +25,7 @@ public class OrderResource {
    private final Logger logger = Logger.getLogger(getClass());
 
    @Inject
-   private RenderingService renderingService;
+   RenderingService renderingService;
 
    @Inject
    @Channel("rendering-requests")
@@ -51,6 +53,7 @@ public class OrderResource {
          response.setChosenOption(order.getOption());
 
          // Creating the number of requests corresponding to frame dividers.
+         int z = 0;
          for (int x=0; x<order.getOption().getFrameDividers(); x++) {
             for (int y=0; y<order.getOption().getFrameDividers(); y++) {
                RenderingRequest request = new RenderingRequest();
@@ -63,7 +66,12 @@ public class OrderResource {
                request.setResolutionX(order.getOption().getResolutionX());
                request.setResolutionY(order.getOption().getResolutionY());
                // Publishing Rendering request on Kafka.
-               renderingRequestPublisher.send(request);
+               OutgoingKafkaRecordMetadata metadata = OutgoingKafkaRecordMetadata.builder()
+                     .withTopic("rendering-requests")
+                     .withPartition(z++)
+                     .build();
+               renderingRequestPublisher.send(Message.of(request).addMetadata(metadata));
+               //renderingRequestPublisher.send(request);
             }
          }
          return Response.ok(response).build();

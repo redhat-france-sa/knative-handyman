@@ -1,0 +1,67 @@
+FROM debian:buster
+
+# Enviorment variables
+ENV PATH "$PATH:/bin/2.92/python/bin/:/bin"
+ENV BLENDER_PATH "/bin/2.92"
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \ 
+	wget \ 
+    curl \
+	libopenexr-dev \ 
+	bzip2 \ 
+	build-essential \ 
+	zlib1g-dev \ 
+	libxmu-dev \ 
+	libxi-dev \ 
+	libxxf86vm-dev \ 
+	libfontconfig1 \ 
+	libxrender1 \ 
+	libgl1-mesa-glx \ 
+	xz-utils \
+    imagemagick \
+    openjdk-11-jre-headless
+
+RUN useradd -u 1001 -s /bin/sh blenderqueue
+
+# Download and install Blender
+RUN wget http://172.17.0.1:8100/blender-2.92.0-linux64.tar.xz \ 
+	&& tar -xvf blender-2.92.0-linux64.tar.xz --strip-components=1 -C /bin \ 
+	&& rm -rf blender-2.92.0-linux64.tar.xz \ 
+	&& rm -rf blender-2.92.0-linux64 
+
+ARG RUN_JAVA_VERSION=1.3.8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+# Install java and the run-java script
+# Also set up permissions for user `1001`
+
+RUN  \
+    mkdir /deployments \
+    && mkdir /deployments/data \
+    && mkdir /deployments/data/final-renders \
+    && chown 1001 /deployments \
+    && chmod "g+rwX" /deployments \
+    && chown 1001:root /deployments \
+    && chown 1001 /deployments/data \
+    && chmod "g+rwX" /deployments/data \
+    && chown 1001:root /deployments/data \
+    && chown 1001 /deployments/data/final-renders \
+    && chmod "g+rwX" /deployments/data/final-renders \
+    && chown 1001:root /deployments/data/final-renders
+
+COPY --chown=1001 run-java.sh /deployments/run-java.sh
+RUN chmod 755 /deployments/run-java.sh 
+
+# Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+# We make four distinct layers so if there are application changes the library layers can be re-used
+COPY --chown=1001 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=1001 target/quarkus-app/*.jar /deployments/
+COPY --chown=1001 rest-api.py /deployments/rest-api.py
+COPY --chown=1001 target/quarkus-app/app/ /deployments/app/
+COPY --chown=1001 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 1001
+
+ENTRYPOINT [ "/deployments/run-java.sh" ]

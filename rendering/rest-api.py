@@ -58,7 +58,7 @@ class handler(BaseHTTPRequestHandler):
                 scene.render.image_settings.file_format='PNG'
                 scene.render.image_settings.color_depth='16'
                 scene.render.image_settings.color_mode='RGBA'
-                scene.render.use_compositing=False
+                scene.render.use_compositing=True
                 
                 scene.render.tile_x=16
                 scene.render.tile_y=16
@@ -68,8 +68,8 @@ class handler(BaseHTTPRequestHandler):
                 scene.cycles.use_denoising=False
                 
                 
-                scene.view_settings.view_transform='Filmic Log'
-                scene.view_settings.look='None'
+                scene.view_settings.view_transform='Filmic'
+                scene.view_settings.look='High Contrast'
 
                 scene.render.use_save_buffers=True
                 scene.render.use_persistent_data=False

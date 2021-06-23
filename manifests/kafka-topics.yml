@@ -8,7 +8,7 @@ spec:
   config:
     retention.ms: 604800000
     segment.bytes: 1073741824
-  partitions: 100
+  partitions: 25
   replicas: 1
 --
 apiVersion: kafka.strimzi.io/v1beta2
@@ -34,5 +34,6 @@ spec:
   config:
     retention.ms: 604800000
     segment.bytes: 1073741824
+    max.message.bytes: 2097152
   partitions: 10
   replicas: 1

@@ -1,0 +1,29 @@
+apiVersion: sources.knative.dev/v1beta1
+kind: KafkaSource
+metadata:
+  name: kafka-source
+  labels:
+    app: kafka-source
+    app.kubernetes.io/component: kafka-source
+    app.kubernetes.io/instance: kafka-source
+    app.kubernetes.io/part-of: event-sources-app
+spec:
+  bootstrapServers:
+    - 'my-cluster-kafka-bootstrap.handyman.svc:9092'
+  consumerGroup: handyman-rendering-group
+  net:
+    sasl:
+      password: {}
+      type: {}
+      user: {}
+    tls:
+      caCert: {}
+      cert: {}
+      key: {}
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: handyman-rendering
+  topics:
+    - rendering-requests

@@ -68,8 +68,7 @@ Supported APIs:
 
 Then we create the Knative service using the rendering container image:
 
-```
-shell
+```shell
 kn service create handyman-rendering --image docker.io/alainpham/rendering:latest \
     --env FILESERVERURL=handyman-ordering:8080/download/ --env UPLOADSERVERURL=handyman-ordering:8080/renders/ \
     --env KAFKABROKER=my-cluster-kafka-bootstrap:9092 --env JAVA_OPTIONS=-Xmx3g --env QUARKUS_HTTP_READ_TIMEOUT=60m \
@@ -78,7 +77,7 @@ kn service create handyman-rendering --image docker.io/alainpham/rendering:lates
 ```
 
 > You'll notice that we use a fair amount of resources. Also, note the concurrency-limit and target flags ensuring that each
-rendering pod will only receivee and process 1 rendering request at a time.  
+rendering pod will only receive and process 1 rendering request at a time.  
 
 Final step is now to deploy the Knative Kafka `EventSource`:
 

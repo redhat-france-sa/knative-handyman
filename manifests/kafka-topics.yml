@@ -5,12 +5,9 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
   partitions: 25
   replicas: 1
---
+---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -18,12 +15,9 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
-  partitions: 10
+  partitions: 1
   replicas: 1
---
+---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -32,8 +26,6 @@ metadata:
     strimzi.io/cluster: my-cluster
 spec:
   config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
     max.message.bytes: 2097152
-  partitions: 10
+  partitions: 1
   replicas: 1

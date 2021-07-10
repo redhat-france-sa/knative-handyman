@@ -45,3 +45,26 @@ You can then execute your native executable with: `./target/rendering-1.0.0-SNAP
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
 
+
+Build container
+```
+mvn package -DskipTests
+docker build -t rendering -f src/main/docker/Dockerfile.blender.buster.jvm .
+docker tag rendering:latest alainpham/rendering:latest
+
+docker push alainpham/rendering:latest
+
+
+docker run --rm --net primenet --ip 172.18.0.230 -p 8080:8080 -e FILESERVERURL=172.18.0.1:8090/download/ -e UPLOADSERVERURL=172.18.0.1:8090/renders/ alainpham/rendering:latest
+```
+
+
+KAFKABROKER=amqstreams:9092
+
+
+oc new-app alainpham/rendering:latest -e KAFKABROKER=my-cluster-kafka-bootstrap:9092 -e FILESERVERURL=handyman-ordering:8080/download/ -e UPLOADSERVERURL=handyman-ordering:8080/renders/ 
+oc delete service rendering
+oc expose deployment/rendering --port=8083
+oc expose svc rendering
+
+oc delete all -l app=rendering

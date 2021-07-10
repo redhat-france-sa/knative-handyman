@@ -4,17 +4,34 @@
 
     <!-- This route receives rendering request through HTTP with CloudEvents -->
     <route id="http-receiver">
-        <from uri="platform-http:/render"/>
+        <from uri="platform-http:/"/>
+        <convertBodyTo type="java.lang.String"/>
         <log message="Message received from HTTP : ${body}"/>
+        <removeHeaders pattern="*"/>
         <to uri="direct:render-area"/>
+        <setBody>
+            <constant>ok</constant>
+        </setBody>
+    </route>
+
+    <route>
+        <from uri="platform-http:/dummy"/>
+        <setBody>
+            <constant>test</constant>
+        </setBody>
+        <to uri="file:{{blenderqueue.blend.files.folder}}"/>
+        <setBody>
+            <constant>test</constant>
+        </setBody>
+        <log message="done"/>
     </route>
 
     <!-- This route receives rendering request through Kafka -->
-    <route id="kafka-receiver">
+    <!-- <route id="kafka-receiver">
         <from uri="kafka:rendering-requests?brokers={{kafkabroker}}&amp;groupId=renderers"/>
         <log message="Message received from Kafka : ${body}"/>
         <to uri="direct:render-area"/>
-    </route>
+    </route> -->
 
     <!-- This route is called either by HTTP or Kafka entry points -->
     <route id="render-area">
@@ -52,12 +69,11 @@
         </setHeader>
         
 
-
-        <toD uri="http://{{fileserverurl}}/${header.CamelAwsS3Key}?httpMethod=GET"/>
-        <to uri="file:{{blenderqueue.blend.files.folder}}"/>
-        <!-- <to uri="aws2-s3://knative-handyman?amazonS3Client=#s3Client&amp;region=eu-west-3&amp;operation=getObject&amp;deleteAfterRead=false"/> -->
-        <!-- <toD uri="file://~/blender/${body['objectKey']}"/> -->
-
+        
+        <toD uri="http://{{fileserverurl}}/${header.CamelAwsS3Key}?httpMethod=GET&amp;disableStreamCache=true"/>
+        
+        <log message="downloaded"/>
+         <to uri="file:{{blenderqueue.blend.files.folder}}"/>
         <setBody>
             <simple>
                 {
@@ -72,7 +88,7 @@
         <setBody>
             <simple>
                 {
-                    "outputPrefix" : "${exchange.properties[origBody]['objectKey']}",
+                    "outputPrefix" : "${exchange.properties[origBody]['renderingId']}",
                     "resolutionX" : ${exchange.properties[origBody]['resolutionX']},
                     "resolutionY" : ${exchange.properties[origBody]['resolutionY']},
                     "samples" : ${exchange.properties[origBody]['samples']},

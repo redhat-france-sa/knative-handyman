@@ -1,0 +1,31 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: rendering-requests
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 25
+  replicas: 1
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: rendering-status
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 1
+  replicas: 1
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: rendering-results
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  config:
+    max.message.bytes: 2097152
+  partitions: 1
+  replicas: 1

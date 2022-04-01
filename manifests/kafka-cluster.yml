@@ -1,5 +1,5 @@
-apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
+apiVersion: kafka.strimzi.io/v1beta2
 metadata:
   name: my-cluster
 spec:
@@ -8,11 +8,9 @@ spec:
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
-      log.message.format.version: '2.7'
-      inter.broker.protocol.version: '2.7'
-    version: 2.7.0
-    storage:
-      type: ephemeral
+      log.message.format.version: '3.0'
+      inter.broker.protocol.version: '3.0'
+    version: 3.0.0
     replicas: 3
     listeners:
       - name: plain
@@ -27,10 +25,12 @@ spec:
         port: 9094
         type: route
         tls: true
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
   entityOperator:
     topicOperator: {}
     userOperator: {}
-  zookeeper:
-    storage:
-      type: ephemeral
-    replicas: 3

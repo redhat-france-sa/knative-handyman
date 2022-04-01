@@ -5,6 +5,6 @@ metadata:
   annotations:
     olm.providedAPIs: >-
       KnativeEventing.v1alpha1.operator.knative.dev,KnativeKafka.v1alpha1.operator.serverless.openshift.io,KnativeServing.v1alpha1.operator.knative.dev
-  name: openshift-serverless-5s8vg
+  name: openshift-serverless-mrb2p
   namespace: openshift-serverless
 spec: {}

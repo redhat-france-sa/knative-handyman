@@ -4,7 +4,9 @@
 ## Installation
 ### Deploy required Operators
 
-This demonstration has been tested on OpenShift version 4.7. In order to deploy it, you'll need the AMQ Streams/Strimzi.io
+> This demonstration has been created on OpenShift version 4.7 and recently updated to OpenShift 4.9+. If you stick with OpenShift 4.7 for now, check the manifests placed in `/manifests/openshift-4.7` folder for specific resources versions.
+
+This demonstration has been tested on OpenShift version 4.9. In order to deploy it, you'll need the AMQ Streams/Strimzi.io
 operator as well as the OpenShoft Serverless/Knative operator. Start installing these operators for the whole cluster:
 
 ```shell

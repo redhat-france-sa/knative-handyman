@@ -1,6 +1,18 @@
 # knative-handyman
 
+We're all handymen... but as geeks, we cannot stand transforming this into a side project...
 ## What is it?
+
+This demonstration use the power of event-driven architecture and Knative serverless features to build an on-demand infrastructure for producing photo-realistic rendering of [Blender](https://blender.org) scenes.
+
+The architecture is summarized in below drawing:
+
+![architecture](assets/architecture.png)
+
+* An `ordering` component is taking care of displaying a workbench UI, upload Blender files, propose and order rendering with different quality levels,
+* Then, rendering requests are produced and published over a Kafka broker,
+* A Knative source then spawns different `rendering` component pods that takes care of their own rendering tile of the whole scene,
+* Rendered tile PNG are sent back through Kafka and the `odering` pod takes care of sending them back to the UI using WebSocket.
 ## Installation
 ### Deploy required Operators
 
@@ -91,7 +103,7 @@ Wait for some seconds and you should have the following topology view on the dev
 
 ![openshift-topology](assets/openshift-topology.png)
 
-## Runnning the demo
+## Running the demo
 
 Connect to the route of `handyman-ordering` component and upload a Blender file to the application:
 
